@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.media.ExifInterface;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -16,29 +17,66 @@ import java.util.Date;
  */
 class ImageRotation {
 
-    private static Bitmap rotationImage(String imagePath, int maxWidth, int maxHeight) {
+    private static Bitmap rotationImage(String imagePath) throws IOException {
         try {
+            ExifInterface exif = null;
+            try {
+                exif = new ExifInterface(imagePath);
+            } catch (IOException e) {
+                exif = null;
+                // 返回没有exif的错误提示,表示普通的jpeg文件直接跳过
+                throw new IOException("hasn't exif");
+            }
+
             Bitmap image = BitmapFactory.decodeFile(imagePath);
             if (image == null) {
                 return null; // Can't load the image from the given path.
             }
 
-            if (maxHeight > 0 && maxWidth > 0) {
-                int width = image.getWidth();
-                int height = image.getHeight();
-                float ratioBitmap = (float) width / (float) height;
-                float ratioMax = (float) maxWidth / (float) maxHeight;
+            float degrees = 0;
 
-                int finalWidth = maxWidth;
-                int finalHeight = maxHeight;
-                if (ratioMax > 1) {
-                    finalWidth = (int) ((float) maxHeight * ratioBitmap);
-                } else {
-                    finalHeight = (int) ((float) maxWidth / ratioBitmap);
-                }
-                image = Bitmap.createScaledBitmap(image, finalWidth, finalHeight, true);
+            // 读取图片中相机方向信息
+            int ori = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_UNDEFINED);
+            // 计算旋转角度
+            switch (ori) {
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    degrees = 90;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    degrees = 180;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    degrees = 270;
+                    break;
+                default:
+                    degrees = 0;
+                    break;
             }
 
+            if (degrees != 0) {
+                // 旋转图片
+                Matrix m = new Matrix();
+                m.postRotate(degrees);
+                try {
+                    Bitmap tmpImg = Bitmap.createBitmap(image, 0, 0, image.getWidth(),
+                            image.getHeight(), m, true);
+
+                    if (image != tmpImg) {
+                        image.recycle();
+                        image = tmpImg;
+                    }
+
+                } catch (OutOfMemoryError ex) {
+                    //
+                    return null;
+                }
+            } else {
+                // 如果没有旋转角度则直接返回错误,不再转动
+                throw new IOException("No need rotation");
+            }
+
+            // 返回已经被转动过的图片
             return image;
         } catch (OutOfMemoryError ex) {
             // No memory available for resizing.
@@ -47,40 +85,20 @@ class ImageRotation {
         return null;
     }
 
-    public static Bitmap rotateImage(Bitmap b, float degrees)
-    {
-        if (degrees != 0 && b != null) {
-            Matrix m = new Matrix();
-            m.setRotate(degrees,
-                    (float) b.getWidth() / 2, (float) b.getHeight() / 2);
-            try {
-                Bitmap b2 = Bitmap.createBitmap(
-                        b, 0, 0, b.getWidth(), b.getHeight(), m, true);
-                if (b != b2) {
-                    b.recycle();
-                    b = b2;
-                }
-            } catch (OutOfMemoryError ex) {
-                // No memory available for rotating. Return the original bitmap.
-            }
-        }
-        return b;
-    }
-
     private static String saveImage(Bitmap bitmap, File saveDirectory, String fileName,
                                     Bitmap.CompressFormat compressFormat)
             throws IOException {
         if (bitmap == null) {
-            throw new IOException("The bitmap couldn't be resized");
+            throw new IOException("The bitmap couldn't be rotation");
         }
 
         File newFile = new File(saveDirectory, fileName + "." + compressFormat.name());
-        if(!newFile.createNewFile()) {
+        if (!newFile.createNewFile()) {
             throw new IOException("The file already exists");
         }
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        bitmap.compress(compressFormat, 100, outputStream);
+        bitmap.compress(compressFormat, 95, outputStream);
         byte[] bitmapData = outputStream.toByteArray();
 
         outputStream.flush();
@@ -96,8 +114,14 @@ class ImageRotation {
 
     // 新建自动旋转的图片
     public static String createAutoRotationImage(Context context, String imagePath, Bitmap.CompressFormat compressFormat) throws IOException {
+        Bitmap rotateImage;
+        try {
+            rotateImage = ImageRotation.rotationImage(imagePath);
+        } catch (IOException e) {
+            // 如果出错表示不需要旋转,直接返回原文件
+            return imagePath;
+        }
 
-        Bitmap rotateImage = ImageRotation.rotateImage(ImageRotation.rotationImage(imagePath));
         return ImageRotation.saveImage(rotateImage, context.getCacheDir(),
                 Long.toString(new Date().getTime()), compressFormat);
     }

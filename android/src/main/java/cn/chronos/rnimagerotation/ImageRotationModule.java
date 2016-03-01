@@ -43,13 +43,12 @@ class ImageRotationModule extends ReactContextBaseJavaModule {
 
     private void createRotationImageWithExceptions(String imagePath,
                                                    final Callback successCb, final Callback failureCb) throws IOException {
-        Bitmap.CompressFormat compressFormat = Bitmap.CompressFormat.valueOf("PNG");
+        Bitmap.CompressFormat compressFormat = Bitmap.CompressFormat.JPEG;
         // 处理uri
         if (imagePath.startsWith("file:") || imagePath.startsWith("content:")) {
             imagePath = (Uri.parse(imagePath)).getPath();
-        }
-        else if ( !this.isAbsolutePath(imagePath)) {
-            failureCb.invoke("upload error" + "Can't handle " + imagePath);
+        } else if (!this.isAbsolutePath(imagePath)) {
+            throw new IOException("upload error" + "Can't handle " + imagePath);
         }
 
         String rotationImagePath = ImageRotation.createAutoRotationImage(this.context, imagePath, compressFormat);
