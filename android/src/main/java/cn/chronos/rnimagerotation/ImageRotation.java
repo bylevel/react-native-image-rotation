@@ -12,11 +12,11 @@ import java.io.IOException;
 import java.util.Date;
 
 /**
- * Created by almouro on 11/19/15.
+ * Created by chronos on 01/03/16.
  */
 class ImageRotation {
 
-    private static Bitmap resizeImage(String imagePath, int maxWidth, int maxHeight) {
+    private static Bitmap rotationImage(String imagePath, int maxWidth, int maxHeight) {
         try {
             Bitmap image = BitmapFactory.decodeFile(imagePath);
             if (image == null) {
@@ -68,7 +68,7 @@ class ImageRotation {
     }
 
     private static String saveImage(Bitmap bitmap, File saveDirectory, String fileName,
-                                    Bitmap.CompressFormat compressFormat, int quality)
+                                    Bitmap.CompressFormat compressFormat)
             throws IOException {
         if (bitmap == null) {
             throw new IOException("The bitmap couldn't be resized");
@@ -80,7 +80,7 @@ class ImageRotation {
         }
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        bitmap.compress(compressFormat, quality, outputStream);
+        bitmap.compress(compressFormat, 100, outputStream);
         byte[] bitmapData = outputStream.toByteArray();
 
         outputStream.flush();
@@ -94,12 +94,11 @@ class ImageRotation {
         return newFile.getAbsolutePath();
     }
 
-    public static String createResizedImage(Context context, String imagePath, int newWidth,
-                                            int newHeight, Bitmap.CompressFormat compressFormat,
-                                            int quality, int rotation) throws IOException {
+    // 新建自动旋转的图片
+    public static String createAutoRotationImage(Context context, String imagePath, Bitmap.CompressFormat compressFormat) throws IOException {
 
-        Bitmap resizedImage = ImageRotation.rotateImage(ImageRotation.resizeImage(imagePath, newWidth, newHeight), rotation);
-        return ImageRotation.saveImage(resizedImage, context.getCacheDir(),
-                Long.toString(new Date().getTime()), compressFormat, quality);
+        Bitmap rotateImage = ImageRotation.rotateImage(ImageRotation.rotationImage(imagePath));
+        return ImageRotation.saveImage(rotateImage, context.getCacheDir(),
+                Long.toString(new Date().getTime()), compressFormat);
     }
 }

@@ -2,16 +2,18 @@ package cn.chronos.rnimagerotation;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.net.Uri;
 
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
- * Created by almouro on 19/11/15.
+ * Created by chronos on 01/03/16.
  */
 class ImageRotationModule extends ReactContextBaseJavaModule {
     private Context context;
@@ -27,28 +29,36 @@ class ImageRotationModule extends ReactContextBaseJavaModule {
      */
     @Override
     public String getName() {
-        return "ImageResizerAndroid";
+        return "ImageRotationAndroid";
     }
 
     @ReactMethod
-    public void createResizedImage(String imagePath, int newWidth, int newHeight, String compressFormat,
-                            int quality, int rotation, final Callback successCb, final Callback failureCb) {
+    public void createRotationImage(String imagePath, final Callback successCb, final Callback failureCb) {
         try {
-            createResizedImageWithExceptions(imagePath, newWidth, newHeight, compressFormat, quality,
-                    rotation, successCb, failureCb);
+            createRotationImageWithExceptions(imagePath, successCb, failureCb);
         } catch (IOException e) {
             failureCb.invoke(e.getMessage());
         }
     }
 
-    private void createResizedImageWithExceptions(String imagePath, int newWidth, int newHeight,
-                                           String compressFormatString, int quality, int rotation,
-                                           final Callback successCb, final Callback failureCb) throws IOException {
-        Bitmap.CompressFormat compressFormat = Bitmap.CompressFormat.valueOf(compressFormatString);
-        imagePath = imagePath.replace("file:", "");
-        String resizedImagePath = ImageRotation.createResizedImage(this.context, imagePath, newWidth,
-                newHeight, compressFormat, quality, rotation);
+    private void createRotationImageWithExceptions(String imagePath,
+                                                   final Callback successCb, final Callback failureCb) throws IOException {
+        Bitmap.CompressFormat compressFormat = Bitmap.CompressFormat.valueOf("PNG");
+        // 处理uri
+        if (imagePath.startsWith("file:") || imagePath.startsWith("content:")) {
+            imagePath = (Uri.parse(imagePath)).getPath();
+        }
+        else if ( !this.isAbsolutePath(imagePath)) {
+            failureCb.invoke("upload error" + "Can't handle " + imagePath);
+        }
 
-        successCb.invoke("file:" + resizedImagePath);
+        String rotationImagePath = ImageRotation.createAutoRotationImage(this.context, imagePath, compressFormat);
+
+        successCb.invoke("file:" + rotationImagePath);
+    }
+
+    // 判断是否是有效的文件路径
+    private boolean isAbsolutePath(String path) {
+        return (new File(path)).exists();
     }
 }
