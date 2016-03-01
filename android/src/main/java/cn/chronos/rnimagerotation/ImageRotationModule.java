@@ -8,6 +8,7 @@ import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.WritableMap;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,9 +52,9 @@ class ImageRotationModule extends ReactContextBaseJavaModule {
             throw new IOException("upload error" + "Can't handle " + imagePath);
         }
 
-        String rotationImagePath = ImageRotation.createAutoRotationImage(this.context, imagePath, compressFormat);
+        WritableMap response = ImageRotation.createAutoRotationImage(this.context, imagePath, compressFormat);
 
-        successCb.invoke("file:" + rotationImagePath);
+        successCb.invoke(response);
     }
 
     // 判断是否是有效的文件路径

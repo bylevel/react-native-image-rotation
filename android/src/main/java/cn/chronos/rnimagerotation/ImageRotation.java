@@ -6,6 +6,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
 
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.WritableMap;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -16,7 +19,6 @@ import java.util.Date;
  * Created by chronos on 01/03/16.
  */
 class ImageRotation {
-
     private static Bitmap rotationImage(String imagePath) throws IOException {
         try {
             ExifInterface exif = null;
@@ -68,8 +70,7 @@ class ImageRotation {
                     }
 
                 } catch (OutOfMemoryError ex) {
-                    //
-                    return null;
+                    throw new IOException("rotation error");
                 }
             } else {
                 // 如果没有旋转角度则直接返回错误,不再转动
@@ -79,14 +80,12 @@ class ImageRotation {
             // 返回已经被转动过的图片
             return image;
         } catch (OutOfMemoryError ex) {
-            // No memory available for resizing.
+            throw new IOException("rotation error");
         }
-
-        return null;
     }
 
-    private static String saveImage(Bitmap bitmap, File saveDirectory, String fileName,
-                                    Bitmap.CompressFormat compressFormat)
+    private static WritableMap saveImage(Bitmap bitmap, File saveDirectory, String fileName,
+                                         Bitmap.CompressFormat compressFormat)
             throws IOException {
         if (bitmap == null) {
             throw new IOException("The bitmap couldn't be rotation");
@@ -109,17 +108,26 @@ class ImageRotation {
         fos.flush();
         fos.close();
 
-        return newFile.getAbsolutePath();
+        // 生成返回内容
+        WritableMap response = Arguments.createMap();
+        response.putString("uri", newFile.getAbsolutePath());
+        // 获取旋转后的宽高
+        response.putInt("width", bitmap.getWidth());
+        response.putInt("height", bitmap.getHeight());
+
+        return response;
     }
 
     // 新建自动旋转的图片
-    public static String createAutoRotationImage(Context context, String imagePath, Bitmap.CompressFormat compressFormat) throws IOException {
+    public static WritableMap createAutoRotationImage(Context context, String imagePath, Bitmap.CompressFormat compressFormat) throws IOException {
         Bitmap rotateImage;
+        WritableMap response = Arguments.createMap();
         try {
             rotateImage = ImageRotation.rotationImage(imagePath);
         } catch (IOException e) {
             // 如果出错表示不需要旋转,直接返回原文件
-            return imagePath;
+            response.putString("uri", imagePath);
+            return response;
         }
 
         return ImageRotation.saveImage(rotateImage, context.getCacheDir(),
