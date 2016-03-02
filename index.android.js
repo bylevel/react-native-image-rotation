@@ -13,7 +13,10 @@ export default {
                 resolve( { ...image, ...imgInfo } );
             };
 
-            ImageRotationAndroid.createRotationImage( image.uri, success, reject );
+            ImageRotationAndroid.createRotationImage( image, success, reject );
         } );
     },
+    getDegrees( imageUri ) {
+        return ImageRotationAndroid.getDegrees( imageUri );
+    }
 };
