@@ -58,7 +58,7 @@ public class ImageRotationModule extends ReactContextBaseJavaModule {
         WritableMap response = Arguments.createMap();
         try {
             if (auto) {
-                degrees = getDegrees(imageUri);
+                degrees = _getDegrees(imageUri);
             }
 
             if (degrees == 0) {
@@ -82,7 +82,12 @@ public class ImageRotationModule extends ReactContextBaseJavaModule {
 
     // 获取照片需要旋转的角度
     @ReactMethod
-    public float getDegrees(String imageUri) {
+    public void getDegrees(String imageUri, final Callback successCb) {
+        // 返回给react
+        successCb.invoke(_getDegrees(imageUri));
+    }
+
+    public float _getDegrees(String imageUri) {
         String imagePath = getPath(imageUri);
         if (imagePath.equals("")) {
             return 0;

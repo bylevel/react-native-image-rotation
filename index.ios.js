@@ -1,5 +1,5 @@
 export default {
-    createRotationImage: ( image ) => {
+    createRotationImage: function( image ) {
         return new Promise( ( resolve, reject ) => {
             if ( !image || !image.uri || !image.width || !image.height ) {
                 reject( 'Required uri、 width、 height' );
@@ -7,7 +7,9 @@ export default {
             resolve( image );
         } );
     },
-    getDegrees( imageUri ) {
-        return 0;
+    getDegrees: function( imageUri ) {
+        return new Promise( ( resolve, reject ) => {
+            resolve( 0 );
+        } );
     }
 };
