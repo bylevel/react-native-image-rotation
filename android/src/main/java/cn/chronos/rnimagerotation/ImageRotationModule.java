@@ -1,8 +1,10 @@
 package cn.chronos.rnimagerotation;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.provider.MediaStore;
 
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -16,7 +18,7 @@ import java.io.IOException;
 /**
  * Created by chronos on 01/03/16.
  */
-class ImageRotationModule extends ReactContextBaseJavaModule {
+public class ImageRotationModule extends ReactContextBaseJavaModule {
     private Context context;
 
     public ImageRotationModule(ReactApplicationContext reactContext) {
@@ -46,8 +48,18 @@ class ImageRotationModule extends ReactContextBaseJavaModule {
                                                    final Callback successCb, final Callback failureCb) throws IOException {
         Bitmap.CompressFormat compressFormat = Bitmap.CompressFormat.JPEG;
         // 处理uri
-        if (imagePath.startsWith("file:") || imagePath.startsWith("content:")) {
-            imagePath = (Uri.parse(imagePath)).getPath();
+        if (imagePath.startsWith("file:")) {
+            imagePath = Uri.parse(imagePath).getPath();
+        } else if (imagePath.startsWith("content:")) {
+            Cursor cursor = context.getContentResolver().query(Uri.parse(imagePath),null,null,null,null);
+            if(cursor == null){
+                throw new IOException("get path err");
+            }
+            if (cursor.moveToFirst()){
+                int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+                Uri filePathUri = Uri.parse(cursor.getString(column_index));
+                imagePath = filePathUri.getPath();
+            }
         } else if (!this.isAbsolutePath(imagePath)) {
             throw new IOException("upload error" + "Can't handle " + imagePath);
         }

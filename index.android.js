@@ -1,11 +1,11 @@
 import React from 'react-native';
 
-const ImageRotationAndroid = React.NativeModules.ImageRotationAndroid;
+import { ImageRotationAndroid } from 'NativeModules';
 
 export default {
     createRotationImage: ( image ) => {
         return new Promise( ( resolve, reject ) => {
-            if ( !image || !image.uri || image.width || image.height ) {
+            if ( !image || !image.uri || !image.width || !image.height ) {
                 reject( 'Required uri、 width、 height' );
             }
 
@@ -13,7 +13,7 @@ export default {
                 resolve( { ...image, ...imgInfo } );
             };
 
-            ImageRotationAndroid.createRotationImage( imageUri, success, reject );
+            ImageRotationAndroid.createRotationImage( image.uri, success, reject );
         } );
     },
 };

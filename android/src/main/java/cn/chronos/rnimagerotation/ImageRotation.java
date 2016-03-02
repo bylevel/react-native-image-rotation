@@ -110,7 +110,7 @@ class ImageRotation {
 
         // 生成返回内容
         WritableMap response = Arguments.createMap();
-        response.putString("uri", newFile.getAbsolutePath());
+        response.putString("uri", "file://" + newFile.getAbsolutePath());
         // 获取旋转后的宽高
         response.putInt("width", bitmap.getWidth());
         response.putInt("height", bitmap.getHeight());
@@ -126,7 +126,7 @@ class ImageRotation {
             rotateImage = ImageRotation.rotationImage(imagePath);
         } catch (IOException e) {
             // 如果出错表示不需要旋转,直接返回原文件
-            response.putString("uri", imagePath);
+            response.putString("uri", "file://" + imagePath);
             return response;
         }
 
