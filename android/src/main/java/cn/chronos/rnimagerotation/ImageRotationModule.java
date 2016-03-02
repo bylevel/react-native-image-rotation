@@ -158,7 +158,15 @@ public class ImageRotationModule extends ReactContextBaseJavaModule {
             throw new IOException("The bitmap couldn't be rotation");
         }
 
-        File newFile = new File(saveDirectory, fileName + "." + compressFormat.name());
+        // 生成文件扩展名
+        String ext = compressFormat.name();
+        if (ext.equals("JPEG")) {
+            ext = "jpg";
+        } else {
+            ext = ext.toLowerCase();
+        }
+
+        File newFile = new File(saveDirectory, fileName + "." + ext);
         if (!newFile.createNewFile()) {
             throw new IOException("The file already exists");
         }
