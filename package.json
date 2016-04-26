@@ -1,6 +1,6 @@
 {
   "name": "react-native-image-rotation",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Auto rotation images with React Native only android",
   "repository": {
     "type": "git",
