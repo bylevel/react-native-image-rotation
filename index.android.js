@@ -1,6 +1,7 @@
 import React from 'react-native';
 
-import { ImageRotationAndroid } from 'NativeModules';
+import { NativeModules } from 'react-native';
+var {ImageRotationAndroid} = NativeModules;
 
 
 export default {
